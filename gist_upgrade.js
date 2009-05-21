@@ -40,15 +40,14 @@ jQuery(document).ready(function () {
                             '<div class="line nn"></div>' +
                         '</div>' +
                     '</div>' +
+                    /* and add the blurb at the bottom (no raw link though) */
+                    '<div class="gist-meta">' +
+                        '<a href="http://gist.github.com/'+ id +'">This Gist</a>' +
+                        ' brought to you by <a href="http://github.com">GitHub</a>.' +
+                    '</div>' +
                 '</div>' +
             '</div>'
-        ).parents('.gist-file:first').append(
-            /* then add the blurb at the bottom (no raw link though) */
-            '<div class="gist-meta">' +
-                '<a href="http://gist.github.com/'+ id +'">This Gist</a>' +
-                ' brought to you by <a href="http://github.com">GitHub</a>.' +
-            '</div>'
-        ).attr('id', 'fake-gist-'+id);
+        ).parents('div.gist:first').attr('id', 'fake-gist-'+id);
 
         /* asynchronously fetch the gist itself. It will be evaled and the html
          * will be trapped by the document.write wrapper */
