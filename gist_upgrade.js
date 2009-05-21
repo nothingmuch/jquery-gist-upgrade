@@ -4,34 +4,13 @@
 /* Copyright 2009 Yuval Kogman, MIT license */
 
 jQuery(document).ready(function () {
-    /* I don't know of a better way to trap the gist js than this. Hopefully it
-     * doesn't break anything too badly. By the time this runs document.write
-     * should be pretty much useless anyway */
-    document._non_gist_write = document.write;
-
-    document.write = function (html) {
-        if ( html.match(/gist/) ) {
-            /* find the fake gist and replace it with this one. We skip the
-             * <link rel="stylesheet"> */
-
-            var gist = jQuery(html);
-
-            if ( gist.attr('id').match('gist') ) {
-                jQuery('#fake-' + gist.attr('id')).replaceWith(gist);
-            }
-        } else {
-            /* otherwise proceed normally */
-            document._non_gist_write(html);
-        }
-    };
-
-    /* this chops up and wraps the pre so that it looks like a gist before it's
-     * highlighted */
+    /* this wraps the pre so that it looks like a gist before it's
+     * highlighted, and then makes an ajax call to load the gist */
 
     jQuery('pre.fake-gist').each(function (i, e) {
         var id = jQuery(e).attr('id').match('\\d+');
 
-        jQuery(e).removeAttr('id').wrap(
+        jQuery(e).wrap(
             /* first we wrap with the various classes */
             '<div class="gist-file">' +
                 '<div class="gist-data gist-syntax">' +
@@ -43,14 +22,14 @@ jQuery(document).ready(function () {
         ).parents('.gist-file:first').append(
             /* then add the blurb at the bottom (no raw link though) */
             '<div class="gist-meta">' +
-                '<a href="http://gist.github.com/'+ id +'">This Gist</a>' +
+                '<a href="http://gist.github.com/'+id+'">This Gist</a>' +
                 ' brought to you by <a href="http://github.com">GitHub</a>.' +
             '</div>'
-        ).attr('id', 'fake-gist-'+id);
-
-        /* asynchronously fetch the gist itself. It will be evaled and the html
-         * will be trapped by the document.write wrapper */
-        jQuery.getScript("http://gist.github.com/"+ id +".js");
+        ).wrap(
+            /* wrap in another div that we use for the ajax load, and then
+             * fetch the HTML block from github */
+            '<div></div>'
+        ).parent().load("http://gist.github.com/"+id+".pibb");
     });
 });
 
