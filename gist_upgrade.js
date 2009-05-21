@@ -33,10 +33,12 @@ jQuery(document).ready(function () {
 
         jQuery(e).removeAttr('id').wrap(
             /* first we wrap with the various classes */
-            '<div class="gist-file">' +
-                '<div class="gist-data gist-syntax">' +
-                    '<div class="gist-highlight">' +
-                        '<div class="line nn"></div>' +
+            '<div class="gist">' +
+                '<div class="gist-file">' +
+                    '<div class="gist-data gist-syntax">' +
+                        '<div class="gist-highlight">' +
+                            '<div class="line nn"></div>' +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
             '</div>'
