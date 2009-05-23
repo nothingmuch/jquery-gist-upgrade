@@ -11,10 +11,7 @@ my $gist = shift or die "No gist ID specified";
 my $raw = get("http://gist.github.com/${gist}.txt");
 my $escaped = encode_entities($raw);
 
-chomp $escaped; # we add a newline unconditionally below
-
 print <<HTML;
 <pre id="fake-gist-$gist" class="fake-gist">
-$escaped
-</pre>
+$escaped</pre>
 HTML
