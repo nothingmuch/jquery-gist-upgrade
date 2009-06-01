@@ -19,6 +19,15 @@ use Moose;
 has fun =&gt; ( isa =&gt; &quot;Constant&quot; );</pre>
 
 
+<!-- this is a pre block that will be posted and replaced by update.pl if run -->
+<pre class="fake-gist" lang="pl"><![CDATA[
+my $updated = $container->clone(
+	the_person => $person->clone(
+		name => "Hefetz",
+	),
+);
+]]></pre>
+
 	</body>
 </html>
 
