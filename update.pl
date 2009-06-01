@@ -5,7 +5,6 @@ use MooseX::Declare;
 use MooseX::Getopt (); # preload the traits
 
 class FakeGistUpdater with MooseX::Getopt::Dashes {
-	use XML::LibXML;
 	use LWP::Simple qw(get);
 	use Carp qw(croak);
 	use MooseX::Types::Path::Class qw(File);
@@ -73,6 +72,14 @@ class FakeGistUpdater with MooseX::Getopt::Dashes {
 		documentation => "Backup extension (defaults to ~)"
 	);
 
+	has parser_class => (
+		traits        => [qw(Getopt)],
+		isa           => "Str",
+		is            => "ro",
+		default       => "XML::LibXML",
+		documentation => "Specify an XML parser class (e.g. XML::Liberal) (defaults to XML::LibXML)",
+	);
+
 
 	has parser => (
 		traits     => [qw(NoGetopt)],
@@ -83,7 +90,11 @@ class FakeGistUpdater with MooseX::Getopt::Dashes {
 	);
 
 	method _build_parser {
-		my $parser = XML::LibXML->new;
+		my $class = $self->parser_class;
+
+		Class::MOP::load_class($class);
+
+		my $parser = $class->new;
 
 		$parser->no_network(1) unless $self->allow_network;
 
