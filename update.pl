@@ -4,8 +4,10 @@ use MooseX::Declare;
 
 use MooseX::Getopt (); # preload the traits
 
+use 5.010;
+
 class FakeGistUpdater with MooseX::Getopt::Dashes {
-	use LWP::Simple qw(get);
+	use AnyEvent::HTTP;
 	use Carp qw(croak);
 	use MooseX::Types::Path::Class qw(File);
 	
@@ -134,8 +136,8 @@ class FakeGistUpdater with MooseX::Getopt::Dashes {
 		$self->dom->documentElement->findnodes(q{//*[contains(concat(' ', @class, ' '), ' fake-gist ')]})->get_nodelist;
 	}
 
-	method download_gist ($gist) {
-		get("http://gist.github.com/${gist}.txt");
+	method gist_uri ($gist) {
+		"http://gist.github.com/${gist}.txt";
 	}
 
 	method replace_text ($elem, $text) {
@@ -147,9 +149,18 @@ class FakeGistUpdater with MooseX::Getopt::Dashes {
 		my $id = $node->getAttribute('id');
 
 		my ( $gist_id ) = ( $id =~ /^fake-gist-(.+)$/ );
-		my $gist_text = $self->download_gist($gist_id);
 
-		$self->replace_text($node, $gist_text);
+		my $v = AnyEvent->condvar;
+
+		say "Fetching gist $gist_id";
+
+		http_get $self->gist_uri($gist_id), sub {
+			my $gist_text = shift;
+			$self->replace_text($node, $gist_text);
+			$v->send($node);
+		};
+
+		return $v;
 	}
 
 	method extract_text ($node) {
@@ -180,27 +191,35 @@ class FakeGistUpdater with MooseX::Getopt::Dashes {
 
 		my %args = $self->extract_gist_args($node);
 
+		say "Creating new gist";
+
 		my ( $ok, $link ) = App::Nopaste::Service::Gist->nopaste(%args);
 
 		croak "Gist creation failed: $link" unless $ok;
 
 		my ( $id ) = ( $link =~ /(\d+)$/ );
 
+		say "Created gist $id";
+
 		$node->removeAttribute('lang');
 		$self->replace_text($node, $args{text}); # for consistency
 		$node->setAttribute(id => "fake-gist-$id");
+
+		my $v = AnyEvent->condvar;
+		$v->send($node);
+		return $v;
 	}
 
 	method process_node ($node) {
 		if ( $node->getAttribute('id') ) {
-			$self->update_gist( $node );
+			return $self->update_gist($node);
 		} else {
-			$self->post_gist($node);
+			return $self->post_gist($node);
 		}
 	}
 
 	method process_dom {
-		$self->process_node($_) for $self->get_fake_gist_nodes;
+		$_->recv for map { $self->process_node($_) } $self->get_fake_gist_nodes;
 	}
 
 	method output_dom {
