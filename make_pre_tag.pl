@@ -12,6 +12,5 @@ my $raw = get("http://gist.github.com/${gist}.txt");
 my $escaped = encode_entities($raw);
 
 print <<HTML;
-<pre id="fake-gist-$gist" class="fake-gist">
-$escaped</pre>
+<pre id="fake-gist-$gist" class="fake-gist">$escaped</pre>
 HTML
