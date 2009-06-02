@@ -28,7 +28,7 @@ jQuery(function ($) {
     /* this chops up and wraps the pre so that it looks like a gist before it's
      * highlighted */
 
-    $('pre.fake-gist').each(function () {
+    $('pre.fake-gist[id]').each(function () {
         var $this = $(this);
         var id = $this.attr('id').match(/\d+/)[0];
 
