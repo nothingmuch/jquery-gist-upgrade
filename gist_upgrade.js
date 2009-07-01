@@ -31,33 +31,29 @@ jQuery(function ($) {
     });
 
     $(window).load(function () {
-        /* I don't know of a better way to trap the gist js than this. Hopefully it
-         * doesn't break anything too badly. By the time this runs document.write
-         * should be pretty much useless anyway */
-        var old_write = document.write;
-
-        document.write = function (html) {
-            if ( html == '<link rel="stylesheet" href="http://gist.github.com/stylesheets/gist/embed.css"/>' ) {
-                /* skip the stylesheet */
-            } else if ( html.indexOf('<div id="gist-') == 0 ) {
-                /* find the fake gist and replace it with this one. */
-                var gist = $(html);
-                var id = gist.attr('id');
-
-                if ( id.indexOf('gist') == 0 )
-                    $('#fake-' + id).replaceWith(gist);
-            } else {
-                /* otherwise proceed normally */
-                old_write.apply(document, arguments);
-            }
-        };
-
         $('div.gist[id]').each(function () {
             var id = $(this).attr('id').match(/\d+/)[0];
 
-            /* asynchronously fetch the gist itself. It will be evaled and the html
-             * will be trapped by the document.write wrapper */
-            $.getScript("http://gist.github.com/"+ id +".js");
+            /* asynchronously fetch the gist data */
+            $.getJSON("http://gist.github.com/"+ id +".json?callback=?", function (gist) {
+                /* Figure out if we need to add the stylesheet
+                 *
+                 * for some reason
+                 * $("link[rel=stylesheet][href='" + gist.stylehseet + "']").length == 0
+                 * doesn't work */
+                var add_stylesheet = true;
+                $("link[rel=stylesheet]").each(function (i,e) {
+                    if ( $(e).attr('href') == gist.stylesheet )
+                        add_stylesheet = false;
+                });
+
+                /* if the stylesheet is not yet in the document, add it */
+                if ( add_stylesheet )
+                    $("head").append('<link rel="stylesheet" href="' + gist.stylesheet + '" />');
+
+                /* find the fake gist and replace it with the marked up one */
+                $('#fake-gist-'+gist.repo).replaceWith(gist.div);
+            });
         });
     });
 });
